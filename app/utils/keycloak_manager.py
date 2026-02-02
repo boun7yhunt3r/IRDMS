@@ -22,7 +22,7 @@ class KeycloakManager:
             client_secret_key=self.client_secret,
         )
     
-    def check_login_with_keycloak(self, username, password):
+    def check_login_with_keycloak(self, username, password, state):
         """
         Authenticate user with Keycloak.
         
@@ -35,6 +35,8 @@ class KeycloakManager:
         """
         try:
             token = self.keycloak_client.token(username, password)
+            userinfo = self.keycloak_client.userinfo(token['access_token'])
+            state.logged_in_user = userinfo.get('name')
             return token
         except Exception:
             return None
@@ -79,7 +81,7 @@ class KeycloakManager:
         
     def login(self, state):
         """Handle user login using Keycloak."""
-        token = self.check_login_with_keycloak(state.username, state.password)
+        token = self.check_login_with_keycloak(state.username, state.password,state)
 
         if token:
             state.login_open = False
@@ -94,5 +96,6 @@ class KeycloakManager:
         state.access_token = None
         state.username = ""
         state.password = ""
+        state.logged_in_user = ""
 
         notify(state, "success", "You have been logged out!")
