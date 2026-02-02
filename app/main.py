@@ -1,17 +1,26 @@
-from taipy.gui import Gui, navigate, notify
+from taipy.gui import Gui, State, navigate, notify, Icon
+
 from pages.home.home_page import home_md
 from pages.login_page import root
 from pages.user.user_page import user_md
+
 from utils.keycloak_manager import KeycloakManager
+from utils.shepard_connect import ShepardManager
 
 login_open = True
 access_token = None
 username = ''
 password = ''
+logged_in_user = ''
 
-# Initialize KeycloakManager once
+# Initialize managers
 keycloak_manager = KeycloakManager()
+shepard_manager = ShepardManager() 
 
+menu_items = [
+    ("Home", Icon("images/home.gif", "Home")),
+    ("User", Icon("images/settings.gif", "User")),
+]
 
 def login(state):
     keycloak_manager.login(state)
@@ -19,7 +28,13 @@ def login(state):
 def logout(state):
     keycloak_manager.logout(state)
 
-def on_navigate(state, page_name):
+# Called when a menu item is clicked
+def menu_action(state: State, var_name: str, var_value: dict):
+    selected_page = var_value["args"][0]         # "Home" / "Dashboard" / "Settings"
+    session_on_navigate(state, selected_page)
+    navigate(state, selected_page)               # Navigate to page
+
+def session_on_navigate(state, page_name):
     """
     Navigation handler that intercepts page navigation.
     Checks session validity before allowing navigation to protected pages.
