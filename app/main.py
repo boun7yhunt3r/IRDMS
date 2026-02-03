@@ -6,16 +6,18 @@ from pages.user.user_page import user_md
 
 from utils.keycloak_manager import KeycloakManager
 from utils.shepard_connect import ShepardManager
+from utils.logger import logger
 
 login_open = True
 access_token = None
 username = ''
 password = ''
 logged_in_user = ''
+tree_data = []
 
 # Initialize managers
 keycloak_manager = KeycloakManager()
-shepard_manager = ShepardManager() 
+# shepard_manager = ShepardManager() 
 
 menu_items = [
     ("Home", Icon("images/home.gif", "Home")),
@@ -24,6 +26,11 @@ menu_items = [
 
 def login(state):
     keycloak_manager.login(state)
+    if state.access_token:
+        logger.info(f"User successfully logged in : {state.logged_in_user}")
+        shepard_manager = ShepardManager(access_token=state.access_token)
+        state.tree_data = shepard_manager.build_tree_structure()
+        
 
 def logout(state):
     keycloak_manager.logout(state)
